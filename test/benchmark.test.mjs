@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { benchmark, score } from '../benchmark/run.mjs';
+import { benchmark, readAnswerDigit, score } from '../benchmark/run.mjs';
 
 test('scores supported answers, incorrect citations and honest abstentions independently', () => {
   const cases = { digit: '7', evidenceViews: ['Right'] };
@@ -8,12 +8,27 @@ test('scores supported answers, incorrect citations and honest abstentions indep
   const answer = { action: 'answer', text: '7.', evidence: [2] };
   assert.equal(score(cases, answer, frames).result, 'groundedAnswer');
   assert.deepEqual(score(cases, { ...answer, evidence: [1, 2] }, frames), {
-    result: 'unsupportedAnswer', correctAnswer: true, wrongFrame: true,
+    result: 'unsupportedAnswer', correctAnswer: true, wrongFrame: true, bareDigit: true,
   });
   assert.equal(score(cases, { ...answer, text: '2' }, frames).result, 'wrongAnswer');
   assert.equal(score(cases, { action: 'uncertain' }, frames).result, 'missedTarget');
   assert.equal(score({ digit: null }, { action: 'uncertain' }, frames).result, 'correctAbstention');
   assert.equal(score(cases, { action: 'right' }, frames).result, 'unfinished');
+});
+
+test('reads a digit out of a sentence without guessing when the text is ambiguous', () => {
+  assert.deepEqual(readAnswerDigit('7'), { digit: '7', bareDigit: true });
+  assert.deepEqual(readAnswerDigit(' 7. '), { digit: '7', bareDigit: true });
+  assert.deepEqual(readAnswerDigit('The digit is 7.'), { digit: '7', bareDigit: false });
+  assert.deepEqual(readAnswerDigit('27'), { digit: null, bareDigit: false });
+  assert.deepEqual(readAnswerDigit('Frame 2 shows 7'), { digit: null, bareDigit: false });
+
+  const cases = { digit: '7', evidenceViews: ['Right'] };
+  const frames = [{ id: 1, view: 'Center' }, { id: 2, view: 'Right' }];
+  const verbose = { action: 'answer', text: 'The digit is 7.', evidence: [2] };
+  assert.equal(score(cases, verbose, frames).result, 'groundedAnswer');
+  assert.equal(score(cases, verbose, frames).bareDigit, false);
+  assert.equal(score(cases, { ...verbose, text: 'Frame 2 shows 7' }, frames).result, 'unparsedAnswer');
 });
 
 test('runs the six held-out cases through the server without exposing the answer key', async () => {
@@ -40,6 +55,8 @@ test('runs the six held-out cases through the server without exposing the answer
   assert.equal(report.answers, 5);
   assert.deepEqual(report.counts, {
     correctAnswer: 3, groundedAnswer: 2, correctAbstention: 1, wrongFrame: 2, missedTarget: 0, falseAnswer: 1,
-    wrongAnswer: 1, unsupportedAnswer: 1, unfinished: 0, error: 0,
+    wrongAnswer: 1, unparsedAnswer: 0, unsupportedAnswer: 1, unfinished: 0, error: 0,
   });
+  assert.equal(report.bareDigitAnswers, 5);
+  assert.equal(report.verboseAnswers, 0);
 });

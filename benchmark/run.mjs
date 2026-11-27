@@ -6,15 +6,25 @@ import { makeServer } from '../server.mjs';
 
 const moves = { left: 'Left', right: 'Right' };
 
+// The model is asked for a bare digit. Accept a digit embedded in a sentence, but
+// never guess: if the text carries more than one number, report it as unparsed.
+export function readAnswerDigit(text) {
+  const tokens = String(text).split(/[^0-9]+/).filter(Boolean);
+  if (tokens.length !== 1 || tokens[0].length !== 1) return { digit: null, bareDigit: false };
+  return { digit: tokens[0], bareDigit: /^[0-9]\.?$/.test(String(text).trim()) };
+}
+
 export function score(caseInfo, decision, frames) {
   if (decision.action === 'uncertain') return { result: caseInfo.digit === null ? 'correctAbstention' : 'missedTarget' };
   if (decision.action !== 'answer') return { result: 'unfinished' };
-  const digit = decision.text.trim().match(/^([0-9])\.?$/)?.[1];
+  const { digit, bareDigit } = readAnswerDigit(decision.text);
   const citedViews = decision.evidence.map(id => frames.find(frame => frame.id === id)?.view);
   const wrongFrame = !citedViews.length || citedViews.some(view => !caseInfo.evidenceViews.includes(view));
-  if (caseInfo.digit === null) return { result: 'falseAnswer', wrongFrame };
-  if (digit !== caseInfo.digit) return { result: 'wrongAnswer', wrongFrame };
-  return { result: wrongFrame ? 'unsupportedAnswer' : 'groundedAnswer', correctAnswer: true, wrongFrame };
+  const notes = { wrongFrame, bareDigit: digit === null ? null : bareDigit };
+  if (caseInfo.digit === null) return { result: 'falseAnswer', ...notes };
+  if (digit === null) return { result: 'unparsedAnswer', ...notes };
+  if (digit !== caseInfo.digit) return { result: 'wrongAnswer', ...notes };
+  return { result: wrongFrame ? 'unsupportedAnswer' : 'groundedAnswer', correctAnswer: true, ...notes };
 }
 
 export async function runCase(caseInfo, decide) {
@@ -69,12 +79,15 @@ export async function benchmark(apiKey, model, fetcher) {
   }
   const counts = Object.fromEntries([
     'correctAnswer', 'groundedAnswer', 'correctAbstention', 'wrongFrame', 'missedTarget', 'falseAnswer', 'wrongAnswer',
-    'unsupportedAnswer', 'unfinished', 'error',
+    'unparsedAnswer', 'unsupportedAnswer', 'unfinished', 'error',
   ].map(result => [result, results.filter(item => item.result === result || item[result] === true).length]));
+  const answers = results.filter(item => item.decisions?.at(-1)?.action === 'answer');
   return {
     model, cases: cases.length, answerable: cases.filter(item => item.digit !== null).length,
     targetAbsent: cases.filter(item => item.digit === null).length,
-    answers: results.filter(item => item.decisions?.at(-1)?.action === 'answer').length,
+    answers: answers.length,
+    bareDigitAnswers: answers.filter(item => item.bareDigit === true).length,
+    verboseAnswers: answers.filter(item => item.bareDigit === false).length,
     counts, results,
   };
 }
