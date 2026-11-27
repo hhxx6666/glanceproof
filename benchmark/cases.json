@@ -1,0 +1,8 @@
+[
+  {"id":"desk-01","category":"occlusion","target":"blue triangle","digit":"7","evidenceViews":["Right"]},
+  {"id":"desk-02","category":"similar objects","target":"blue square","digit":"3","evidenceViews":["Left"]},
+  {"id":"desk-03","category":"target absent","target":"green circle","digit":null,"evidenceViews":[]},
+  {"id":"desk-04","category":"occlusion","target":"red circle","digit":"8","evidenceViews":["Left"]},
+  {"id":"desk-05","category":"target absent","target":"red triangle","digit":null,"evidenceViews":[]},
+  {"id":"desk-06","category":"similar objects","target":"green square","digit":"6","evidenceViews":["Right"]}
+]
