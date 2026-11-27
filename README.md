@@ -33,6 +33,8 @@ node --test
 
 The tests cover all three offline targets, the bounded camera request, and citation validation against a stubbed OpenAI response.
 
+Run the [blind tabletop benchmark](benchmark/README.md) to measure supported answers, correct abstentions and wrong-frame citations on six held-out scenes with occlusions, similar objects and absent targets.
+
 ## Related work
 
 - [realtime-gpt4o-videochat](https://github.com/basvandorst/realtime-gpt4o-videochat) pairs webcam frames with voice questions.
