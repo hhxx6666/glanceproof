@@ -6,9 +6,9 @@ test('scores supported answers, incorrect citations and honest abstentions indep
   const cases = { digit: '7', evidenceViews: ['Right'] };
   const frames = [{ id: 1, view: 'Center' }, { id: 2, view: 'Right' }];
   const answer = { action: 'answer', text: '7.', evidence: [2] };
-  assert.equal(score(cases, answer, frames).result, 'correctAnswer');
+  assert.equal(score(cases, answer, frames).result, 'groundedAnswer');
   assert.deepEqual(score(cases, { ...answer, evidence: [1, 2] }, frames), {
-    result: 'unsupportedAnswer', wrongFrame: true,
+    result: 'unsupportedAnswer', correctAnswer: true, wrongFrame: true,
   });
   assert.equal(score(cases, { ...answer, text: '2' }, frames).result, 'wrongAnswer');
   assert.equal(score(cases, { action: 'uncertain' }, frames).result, 'missedTarget');
@@ -37,8 +37,9 @@ test('runs the six held-out cases through the server without exposing the answer
   assert.equal(report.cases, 6);
   assert.equal(report.answerable, 4);
   assert.equal(report.targetAbsent, 2);
+  assert.equal(report.answers, 5);
   assert.deepEqual(report.counts, {
-    correctAnswer: 2, correctAbstention: 1, wrongFrame: 2, missedTarget: 0, falseAnswer: 1,
+    correctAnswer: 3, groundedAnswer: 2, correctAbstention: 1, wrongFrame: 2, missedTarget: 0, falseAnswer: 1,
     wrongAnswer: 1, unsupportedAnswer: 1, unfinished: 0, error: 0,
   });
 });

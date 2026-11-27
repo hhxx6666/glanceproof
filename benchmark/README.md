@@ -12,7 +12,8 @@ The JSON includes each case’s decision sequence, visited views, outcome and ag
 
 | Metric | Counted when | Denominator |
 | --- | --- | --- |
-| `correctAnswer` | The digit matches and every citation is to a view that shows it | 4 answerable cases |
+| `correctAnswer` | The digit matches the answer key | 4 answerable cases |
+| `groundedAnswer` | The digit matches and every citation is to a view that shows it | 4 answerable cases |
 | `correctAbstention` | The model returns `uncertain` on a scene with no target | 2 absent-target cases |
 | `wrongFrame` | An answer cites a frame without the target digit | All answers, including answers on absent-target scenes |
 

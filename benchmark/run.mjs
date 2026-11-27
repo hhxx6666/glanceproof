@@ -9,12 +9,12 @@ const moves = { left: 'Left', right: 'Right' };
 export function score(caseInfo, decision, frames) {
   if (decision.action === 'uncertain') return { result: caseInfo.digit === null ? 'correctAbstention' : 'missedTarget' };
   if (decision.action !== 'answer') return { result: 'unfinished' };
-  const digit = decision.text.trim().match(/^([1-9])\.?$/)?.[1];
+  const digit = decision.text.trim().match(/^([0-9])\.?$/)?.[1];
   const citedViews = decision.evidence.map(id => frames.find(frame => frame.id === id)?.view);
   const wrongFrame = !citedViews.length || citedViews.some(view => !caseInfo.evidenceViews.includes(view));
   if (caseInfo.digit === null) return { result: 'falseAnswer', wrongFrame };
   if (digit !== caseInfo.digit) return { result: 'wrongAnswer', wrongFrame };
-  return { result: wrongFrame ? 'unsupportedAnswer' : 'correctAnswer', wrongFrame };
+  return { result: wrongFrame ? 'unsupportedAnswer' : 'groundedAnswer', correctAnswer: true, wrongFrame };
 }
 
 export async function runCase(caseInfo, decide) {
@@ -68,12 +68,14 @@ export async function benchmark(apiKey, model, fetcher) {
     server.close();
   }
   const counts = Object.fromEntries([
-    'correctAnswer', 'correctAbstention', 'wrongFrame', 'missedTarget', 'falseAnswer', 'wrongAnswer',
+    'correctAnswer', 'groundedAnswer', 'correctAbstention', 'wrongFrame', 'missedTarget', 'falseAnswer', 'wrongAnswer',
     'unsupportedAnswer', 'unfinished', 'error',
   ].map(result => [result, results.filter(item => item.result === result || item[result] === true).length]));
   return {
     model, cases: cases.length, answerable: cases.filter(item => item.digit !== null).length,
-    targetAbsent: cases.filter(item => item.digit === null).length, counts, results,
+    targetAbsent: cases.filter(item => item.digit === null).length,
+    answers: results.filter(item => item.decisions?.at(-1)?.action === 'answer').length,
+    counts, results,
   };
 }
 
