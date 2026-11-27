@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An active vision workbench. Move the camera, collect evidence, then answer.">
+  <title>GlanceProof · Active vision workbench</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.mjs"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell top-inner">
+      <div class="brand"><span class="mark" aria-hidden="true"><i></i></span>GlanceProof</div>
+      <nav class="source" aria-label="Camera source">
+        <button type="button" id="demo-tab" aria-pressed="true">Tabletop demo</button>
+        <button type="button" id="camera-tab" aria-pressed="false">Webcam</button>
+      </nav>
+    </div>
+  </header>
+  <main class="shell">
+    <header class="intro">
+      <p class="eyebrow"><span aria-hidden="true"></span> ACTIVE VISION WORKBENCH</p>
+      <h1>Look before you answer<span>.</span></h1>
+      <p id="intro-copy">A camera that changes its point of view, then shows you the frame behind its answer.</p>
+    </header>
+    <div class="workbench">
+      <section class="card viewer" aria-labelledby="view-title">
+        <header class="card-head">
+          <h2 id="view-title">Camera view</h2>
+          <span class="pill" id="view-label">Center view</span>
+        </header>
+        <div class="screen">
+          <canvas id="desk" width="720" height="432" aria-label="Simulated tabletop camera"></canvas>
+          <video id="video" autoplay muted playsinline hidden aria-label="Live webcam preview"></video>
+          <img id="review" alt="" hidden>
+          <div id="camera-empty" hidden>
+            <span class="reticle-icon" aria-hidden="true"></span>
+            <strong>Webcam is off</strong>
+            <span>Turn it on to preview your camera.</span>
+          </div>
+          <span class="corner tl" aria-hidden="true"></span><span class="corner tr" aria-hidden="true"></span>
+          <span class="corner bl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
+        </div>
+        <div class="positions" id="positions" aria-label="Simulated camera position">
+          <span data-pose="0">Left</span><span data-pose="1" class="current">Center</span><span data-pose="2">Right</span>
+        </div>
+        <div class="camera-controls" id="camera-controls" hidden>
+          <button type="button" class="secondary" id="camera-power">Turn webcam on</button>
+          <span>Only captured frames are sent to OpenAI.</span>
+        </div>
+        <form id="controls" class="controls">
+          <div id="demo-controls">
+            <p class="field-label" id="target-label">Find an object</p>
+            <div id="targets" class="targets" role="group" aria-labelledby="target-label"></div>
+          </div>
+          <div id="question-controls" hidden>
+            <label class="field-label" for="question">What should the camera find?</label>
+            <input id="question" maxlength="420" placeholder="Where is the red mug?" autocomplete="off">
+          </div>
+          <div class="form-footer">
+            <div id="engine-wrap">
+              <label for="engine" class="sr-only">Decision engine</label>
+              <select id="engine">
+                <option value="offline">Offline demo policy</option>
+                <option value="gpt" disabled>GPT · API key required</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="secondary" id="stop" hidden>Stop run</button>
+              <button type="submit" class="primary" id="run">Run search <span aria-hidden="true">↗</span></button>
+            </div>
+          </div>
+          <p id="error" class="error" role="alert" hidden></p>
+        </form>
+      </section>
+      <section class="card history" aria-labelledby="history-title">
+        <header class="card-head">
+          <h2 id="history-title">Observation log</h2>
+          <span class="pill" id="count">0 frames</span>
+        </header>
+        <div class="history-body">
+          <div class="empty" id="log-empty">
+            <span class="stack-icon" aria-hidden="true">▱</span>
+            <strong>Ready to look</strong>
+            <p>Captured views and the reason for each camera move will appear here.</p>
+          </div>
+          <ol class="log" id="log" aria-label="Run history"></ol>
+          <p class="baseline" id="baseline" hidden></p>
+          <div id="result" class="result" aria-live="polite"></div>
+        </div>
+        <footer class="log-footer">
+          <button type="button" class="secondary" id="live" hidden>Back to live view</button>
+          <button type="button" class="secondary" id="export" disabled>Export run <span aria-hidden="true">↓</span></button>
+        </footer>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

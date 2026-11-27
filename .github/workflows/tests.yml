@@ -1,0 +1,31 @@
+name: Tests
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [22, 24]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - name: Run the test suite
+        run: node --test
+      - name: Start the server and read its status endpoint
+        shell: bash
+        run: |
+          node server.mjs &
+          sleep 2
+          curl -fsS http://127.0.0.1:4173/api/status
+          curl -fsS -o /dev/null http://127.0.0.1:4173/
